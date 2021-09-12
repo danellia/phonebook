@@ -17,7 +17,6 @@ namespace lab2
         {
 			entries.Add(entry);
         }
-		
     }
 	[Serializable]
 	public class PhoneBookEntry
@@ -39,8 +38,15 @@ namespace lab2
 
 			this.lastName = name;
 			this.year = random.Next(minYearValue, maxYearValue);
-			this.phoneNumber = random.Next(minPhoneValue, maxPhoneValue) * 100 + random.Next(minYearValue, maxYearValue) / 100;
-        }
+			if (random.Next(0, 10) == 9)
+            {
+				this.phoneNumber = random.Next(minPhoneValue, maxPhoneValue) * 100 + year % 100;
+			}
+            else
+            {
+				this.phoneNumber = random.Next(minPhoneValue, maxPhoneValue) * 100 + random.Next(minYearValue, maxYearValue) / 100;
+			}
+		}
         public override string ToString()
         {
             return String.Format("{0}, {1}, {2}", lastName, phoneNumber, year);
@@ -48,43 +54,38 @@ namespace lab2
     }
 	public class Serializer
 	{
-		public XmlDocument log;
-		FileStream fs;
+		XmlSerializer xmlSerializer;
 		string logName = "PhoneBook.xml";
 		string lastNamesList = "LastNames.txt";
-		List<PhoneBookEntry> output = new List<PhoneBookEntry>();
 		public Serializer()
 		{
-			log = new XmlDocument();
 			if (!File.Exists(logName))
 			{
-				fs = File.Create(logName);
+				FileStream fs = File.Create(logName);
 				fs.Close();
 			}
 		}
-
-		public void serialize(PhoneBook obj)
+		public void serialize(PhoneBook book)
         {
-			XmlSerializer xmlSerializer = new XmlSerializer(typeof(PhoneBook));
-			TextWriter tw = new StreamWriter(logName);
-			xmlSerializer.Serialize(tw, obj);
-			tw.Close();
+			xmlSerializer = new XmlSerializer(typeof(PhoneBook));
+			using (TextWriter reader = new StreamWriter(logName))
+			{
+				xmlSerializer.Serialize(reader, book);
+			}
         }
-
 		public PhoneBook deserialize()
         {
 			PhoneBook book;
-			XmlSerializer xmlSerializer = new XmlSerializer(typeof(PhoneBook));
-			using (TextReader tr = new StreamReader(logName))
+			xmlSerializer = new XmlSerializer(typeof(PhoneBook));
+			using (StreamReader reader = new StreamReader(logName))
             {
-				book = (PhoneBook)xmlSerializer.Deserialize(tr);
+				book = (PhoneBook)xmlSerializer.Deserialize(reader);
 			}
 			return book;
 		}
 		public void createPhoneBook()
         {
 			PhoneBook book = new PhoneBook();
-			Random random = new Random();
 			using (StreamReader reader = new StreamReader(lastNamesList))
             {
                 while (!reader.EndOfStream) 
@@ -93,16 +94,6 @@ namespace lab2
 				}
 			}
 			serialize(book);
-        }
-
-		public List<PhoneBookEntry> getObject()
-        {
-			PhoneBook bookDeserialized = deserialize();
-            foreach (var entry in bookDeserialized.entries)
-            {
-                output.Add(entry);
-            }
-            return output;
         }
 	}
 }

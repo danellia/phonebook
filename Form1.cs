@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace lab2
@@ -19,32 +13,45 @@ namespace lab2
         }
         private void buttonViewAll_Click(object sender, EventArgs e)
         {
+            listViewAll.Items.Clear();
             serializer.createPhoneBook();
-            foreach (PhoneBookEntry entry in serializer.getObject())
-            {
-                addSubItem(entry.lastName, entry.phoneNumber.ToString(), entry.year.ToString());
-            }
+            showList(listViewAll, serializer.deserialize().entries);
+            buttonChoose.Enabled = true;
+            buttonViewAll.Enabled = false;
         }
         private void buttonChoose_Click(object sender, EventArgs e)
         {
-            listView.Items.Clear();
-            foreach (PhoneBookEntry entry in serializer.getObject())
+            listViewChoose.Items.Clear();
+            PhoneBook bookChoose = new PhoneBook();
+            foreach (PhoneBookEntry entry in serializer.deserialize().entries)
             {
-                if (entry.phoneNumber / 100 == entry.year / 100)
+                if (entry.phoneNumber % 100 == entry.year % 100)
                 {
-                    addSubItem(entry.lastName, entry.phoneNumber.ToString(), entry.year.ToString());
+                    bookChoose.addEntry(entry);
                 }
             }
+            showList(listViewChoose, bookChoose.entries);
+            buttonChoose.Enabled = false;
         }
-        private void addSubItem(string name, string phone, string year)
+        private void showList(ListView list, List<PhoneBookEntry> book)
+        {
+            foreach (PhoneBookEntry entry in book)
+            {
+                addSubItem(entry.lastName, entry.phoneNumber.ToString(), entry.year.ToString(), list);
+            }
+        }
+        private void addSubItem(string name, string phone, string year, ListView list)
         {
             ListViewItem item = new ListViewItem();
             item.SubItems.Add(new ListViewItem.ListViewSubItem(item, name));
             item.SubItems.Add(new ListViewItem.ListViewSubItem(item, phone));
             item.SubItems.Add(new ListViewItem.ListViewSubItem(item, year));
-            item.SubItems.Add(new ListViewItem.ListViewSubItem(item, ""));
-            listView.Items.Add(item);
+            list.Items.Add(item);
+        }
+        private void listView_ColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
+        {
+            e.Cancel = true;
+            e.NewWidth = listViewAll.Columns[e.ColumnIndex].Width;
         }
     }
-
 }
